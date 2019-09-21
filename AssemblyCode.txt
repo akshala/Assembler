@@ -1,0 +1,21 @@
+//Code to perform (A*B)+(C*D)
+
+START
+
+LABEL1		CLA
+			LAC			A
+			MUL			B			//Performed A*B
+			SAC			local		//E is intermediate storage location. 
+			CLA
+			LAC			C
+			MUL			D
+			ADD			local
+			SAC			local
+
+DATA
+
+A 			DW			3			//4 bytes initialized to 3 assuming word length is 4
+B 			DW			2			//4 bytes initialized to 2
+C 			DW			1
+D 			DW			4			
+local		DW			0			//local variable of the program used for intermediate results
