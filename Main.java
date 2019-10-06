@@ -39,54 +39,20 @@ class Assembler{
 //                System.out.print(element + " ");
 //            }
 //            System.out.println();
+//            System.out.println(split[0]);
             if ((!split[0].isEmpty() && split[0] != " " && split[0].charAt(0) != '/') || split[0].isEmpty()){    //This is not a comment in the code, taking comments as lines starting with /
 //                    split[0] can be a space " " but this would not be a label but an opcode instruction
-//                System.out.println(line);
-                if(split[0].equals("START")) {
-                    try{
-                        locationCounter = Integer.parseInt(split[1]); // if start location is given
-                    }
-                    catch(ArrayIndexOutOfBoundsException e){  // if no start location start at address 0
-                        locationCounter = 0;
-                    }
-                    continue;
-                }
                 try{
-                    if(!split[1].isEmpty()){
-                        if(split[1].equals("DW")){ // this is a variable declaration
-                            if(SymTable.find(split[0]) != -1){ // if symbol is already present in the table, update it with value
-                                ArrayList<Object> variableType = new ArrayList<Object>();
-                                variableType.add(split[0]); // adding symbol
-                                variableType.add(SymTable.findAddress(split[2])); // take address which was already stored Offset
-                                variableType.add("Variable"); // type is variable
-                                variableType.add(split[2]); // value
-                                int size = 4; // size ******CHECK******
-                                variableType.add(size);
-                                SymTable.ModifyDetails(SymTable.find(split[2]), variableType);
-                            }
-                            else{ // if variable was not already in the table
-                                ArrayList<Object> variableType = new ArrayList<Object>();
-                                variableType.add(split[0]); // adding symbol
-                                variableType.add(locationCounter); // take address which was already stored Offset    //******CHECK******
-                                variableType.add("Variable"); // type is variable
-                                variableType.add(split[2]); // value
-                                int size = 4; // size ******CHECK******
-                                variableType.add(size);
-                                SymTable.add(variableType);
-                            }
-                            locationCounter += 12;   //******CHECK******
-                        }
-                        else{ // this is an instruction with an opcode
-                            if(!split[0].isEmpty()){ // this would be a label
-                                ArrayList<Object> labelType = new ArrayList<Object>();
-                                labelType.add(split[0]);  // adding symbol
-                                int offset = locationCounter;
-                                labelType.add(offset); //  adding offset
-                                labelType.add("Label");  // the type is label
-                                labelType.add(" ");  // value is null
-                                labelType.add(" ");  // size is null //******CHECK******
-                                SymTable.add(labelType); // add to symbol table
-                            }
+                    if(!split[0].isEmpty()){ // first character is not empty
+                        if(split[0].substring(split[0].length() - 1).equals(":")){ // label is present
+                            ArrayList<Object> labelType = new ArrayList<Object>();
+                            labelType.add(split[0]);  // adding symbol
+                            int offset = locationCounter;
+                            labelType.add(offset); //  adding offset
+                            labelType.add("Label");  // the type is label
+                            labelType.add(" ");  // value is null
+                            labelType.add(" ");  // size is null //******CHECK******
+                            SymTable.add(labelType); // add to symbol table
                             ArrayList<Object> opcodeType = new ArrayList<Object>();
                             opcodeType.add(split[1]); // adding opcode
                             try {
@@ -102,17 +68,28 @@ class Assembler{
                                     literalType.add(value); // value
                                     literalType.add(4);  // size  //******CHECK******
                                 }
-                                else {
-                                    // if it is a variable
-                                    if (SymTable.find(split[2]) == -1) {   // if variable was not already in the table
-                                        ArrayList<Object> variableType = new ArrayList<Object>();
-                                        variableType.add(split[0]); // adding symbol
-                                        variableType.add(locationCounter); // take address which was already stored Offset    //******CHECK******
-                                        variableType.add("Variable"); // type is variable
-                                        variableType.add(split[2]); // value
-                                        int size = 4; // size ******CHECK******
-                                        variableType.add(size);
-                                    }
+                            }
+                            catch(ArrayIndexOutOfBoundsException e){
+                                // in case there is no operand
+                            }
+                            OpTable.add(opcodeType); // add to opcode table
+                            locationCounter += 12;   //******CHECK******
+                        }
+                        else{ // label is not present
+                            ArrayList<Object> opcodeType = new ArrayList<Object>();
+                            opcodeType.add(split[0]); // adding opcode
+                            try {
+                                opcodeType.add(split[1]); // adding operand 1
+                                if(split[1].charAt(0) == '\''){
+                                    // this is a literal. Literal is of the form '=[value]'
+                                    ArrayList<Object> literalType = new ArrayList<Object>();
+                                    literalType.add(""); // name
+                                    literalType.add(locationCounter); // address
+                                    String val_str = split[2].replace("\'", "");
+                                    val_str = split[2].replace("=", "");
+                                    int value = Integer.parseInt(val_str);
+                                    literalType.add(value); // value
+                                    literalType.add(4);  // size  //******CHECK******
                                 }
                             }
                             catch(StringIndexOutOfBoundsException e){
@@ -141,7 +118,7 @@ public class Main {
     public static void main(String[] args) {
         // TODO Auto-generated method stub
         Assembler A = new Assembler();
-        File Code = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Assembler-master/AssemblyCode.txt");
+        File Code = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Assembler-master/input.txt");
         try {
 //            A.Assemble(Code);
             A.passOne(Code);
