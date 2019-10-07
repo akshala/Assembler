@@ -38,7 +38,7 @@ public class Table {
     }
     public void printTable() {  // prints the entire table
         for(int i = 0; i < count; i ++) {
-            System.out.println(Rows[i]);
+//            System.out.println(Rows[i]);
         }
     }
 }
@@ -59,7 +59,7 @@ class SymbolTable extends Table{
 
     public void GetLabels(){
         for(int i = 1; i < count; i ++) {
-            System.out.println(Rows[i].get(0));
+//            System.out.println(Rows[i].get(0));
         }
     }
     public void ModifyDetails(int index, ArrayList<Object> A) {
@@ -141,12 +141,12 @@ class MacroTable extends Table{
         ArrayList<String> Actual = new ArrayList<String>();
         int num = 0;
         String definition = "";
-        System.out.println(Rows);
+//        System.out.println(Rows);
         for(ArrayList<Object> A : Rows) {
             if(A == null)
                 break;
             else {
-                System.out.println(A);
+//                System.out.println(A);
                 if(A.get(0).equals(string)) {
                     Actual = (ArrayList<String>) A.get(5);
                     num = (int) A.get(4);
@@ -154,17 +154,23 @@ class MacroTable extends Table{
                 }
             }
         }
+        
         for(int i = 0; i < num; i ++) {
             Parameters.put(Actual.get(i), operands.get(i));
         }
-        String[] lines = definition.split("\\s+");
+        String[] rows = definition.split("\n");
         String output="";
-        for(int i = 0; i < lines.length; i ++) {
-            if(Parameters.containsKey(lines[i])) {
-                lines[i]=Parameters.get(lines[i]);
+        for(int j = 0; j < rows.length; j ++) {
+            String[] lines = rows[j].split("\\s+");
+            for(int i = 0; i < lines.length;i++) {
+                if(Parameters.containsKey(lines[i])) {
+                    lines[i]=Parameters.get(lines[i]);
+                }
+                output+=lines[i]+" ";
             }
-            output+=lines[i];
+            output+="\n";            
         }
+        output.strip();
         return output;
     }
 

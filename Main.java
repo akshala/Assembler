@@ -28,8 +28,11 @@ class Assembler{
         FileWriter fw = new FileWriter(intermediate);
         int locationCounter = 0;
         Scanner sn = new Scanner(Code);
-        while(sn.hasNextLine()) {
+        boolean STP = false;
+        while(sn.hasNextLine() && STP == false) {
             String line = sn.nextLine();lineNo++;
+            if(line.contains("STP"))
+                STP = true;
 
             //Removing comments if any from the given line
             String[] RemoveComment = line.split("/");
@@ -73,14 +76,20 @@ class Assembler{
                     int address = locationCounter;
                     ArrayList<String> parameters = new ArrayList<String>();
                     for(int i = 0; i < parametersNo; i ++) {
-                        parameters.add(split[3+i]);
+                        parameters.add(split[2+i]);
                     }
                     StringBuilder def = new StringBuilder();
                     line = sn.nextLine();lineNo++;
 //                    System.out.println(line);
                     while(!line.toUpperCase().contains("MEND")) { // end of macro
                         def.append(line).append("\n");   // macro definition
-                        line = sn.nextLine();lineNo++;
+                        try {
+                            line = sn.nextLine();lineNo++;
+                        }
+                        catch(Exception e){
+                            System.out.println("ERROR : MEND not found after Macro declaration!");
+                            break;
+                        }
 //                        System.out.println(line);
                         size += 12;
                     }
@@ -136,11 +145,11 @@ class Assembler{
                         if(parameters==MacroParameters) {
                             locationCounter += MacTable.getSize(split[pos]);
                             ArrayList<String> operands = new ArrayList<String>();
-                            for(int i = pos+1; i<MacroParameters; i++) {
+                            for(int i = pos+1; i<=MacroParameters; i++) {
                                 operands.add(split[i]);
                             }
                             String MacroExpansion = labelName+MacTable.expand(split[pos],operands);
-                            fw.write(labelName+MacroExpansion+"\n");
+                            fw.write(labelName+MacroExpansion);
                         }
                         else {
                             System.out.println("ERROR in line " + lineNo + " : " + split[pos] +" takes "+MacroParameters + " Parameters");
@@ -192,19 +201,19 @@ class Assembler{
                 System.out.println("ERROR in line " + value + " : " + "label " + key + " is not defined");
             }
         }
-        if(!last.equals("STP")){
+        if(!last.contains("STP")){
             ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
             System.out.println("ERROR in line " + lineNo + " : " + "STP statement is not present!");
         }
         fw.close();
-        System.out.print("Symbol Table");
-        SymTable.printTable();
-        System.out.print("Literal Table");
-        LitTable.printTable();
-        System.out.print("Opcode Table");
-        OpTable.printTable();
-        System.out.println("Macro Table");
-        MacTable.printTable();
+//        System.out.print("Symbol Table");
+//        SymTable.printTable();
+//        System.out.print("Literal Table");
+//        LitTable.printTable();
+//        System.out.print("Opcode Table");
+//        OpTable.printTable();
+//        System.out.println("Macro Table");
+//        MacTable.printTable();
         sn.close();
     }
     void passTwo(File Code, File Output) throws IOException{
@@ -233,7 +242,7 @@ class Assembler{
             OPCode = split[pos];
             opcodeBinary = OpCode.getBitcode(OPCode);
 
-            fw.write(locationCounter+" "+ OPCode +"\n");
+//            fw.write(locationCounter+" "+ OPCode +"\n");
             fw.write(address+" "+opcodeBinary+" ");
 
             //Getting operand and their binaries
@@ -242,12 +251,19 @@ class Assembler{
                 int val = 0;
                 try {
                     val = Integer.parseInt(operand);
+                    if(val >= 512) {
+                        System.out.println("Error : size of operand cannot be stored it 8 bits. Must be <= 511");
+                    }
                 }
                 catch(Exception e) {
                     val = SymTable.findAddress(operand);
                 }
                 finally {
                     operandBinary = Integer.toBinaryString(val);
+                    while(operandBinary.length() < 8) {
+                        String inter = "0"+operandBinary;
+                        operandBinary = inter;
+                    }
                     fw.write(operandBinary+" ");
                 }
             }
@@ -265,9 +281,9 @@ public class Main {
     public static void main(String[] args) throws IOException {
         // TODO Auto-generated method stub
         Assembler A = new Assembler();
-        File Code = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Raw Code - Macro + Error Handling/input.txt");
-        File Intermediate = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Raw Code - Macro + Error Handling/Intermediate.txt");
-        File Output = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Raw Code - Macro + Error Handling/output.txt");
+        File Code = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\inputs\\input.txt");
+        File Intermediate = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\\\\\\\inputs\\\\Intermediate.txt");
+        File Output = new File("C:\\Users\\Harsh Kumar Sethi\\Desktop\\\\inputs\\output.txt");
         try {
 //            A.Assemble(Code);
             A.passOne(Code, Intermediate);
