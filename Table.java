@@ -66,6 +66,21 @@ class SymbolTable extends Table{
         Rows[index] = A;
     }
 
+    public boolean valid(String string) {   // if a particular label is present in the macro table or not
+        // TODO Auto-generated method stub
+        boolean found = false;
+        for(ArrayList<Object> A : Rows) {
+            if(A != null) {
+                if(A.get(0).equals(string)) {
+                    return true;
+                }
+            }
+            else
+                return false;
+        }
+        return false;
+    }
+
 }
 
 class MacroTable extends Table{
@@ -154,6 +169,7 @@ class MacroTable extends Table{
     }
 
 }
+
 
 class LiteralTable extends Table{
     LiteralTable(){

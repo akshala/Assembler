@@ -23,16 +23,18 @@ class Assembler{
     }
 
     void passOne(File Code, File intermediate) throws IOException{
+        String last = "";
+        HashMap<String,Integer> foundSymbols = new HashMap<String,Integer>();
         FileWriter fw = new FileWriter(intermediate);
         int locationCounter = 0;
         Scanner sn = new Scanner(Code);
         while(sn.hasNextLine()) {
             String line = sn.nextLine();lineNo++;
-            
+
             //Removing comments if any from the given line
             String[] RemoveComment = line.split("/");
             line = RemoveComment[0];
-            
+
             if(line == "\n" || line == " " || line == null || line.isEmpty() || line.isEmpty()){ // if it is a blank line
                 continue;
             }
@@ -103,13 +105,19 @@ class Assembler{
                     pos = 1;
                     ArrayList<Object> labelType = new ArrayList<Object>();
                     labelName = split[0].substring(0, split[0].length()-1);
-                    labelType.add(split[0].substring(0, split[0].length()-1));  // adding label name
-                    int offset = locationCounter;
-                    labelType.add(offset); //  adding offset
-                    labelType.add("Label");  // the type is label
-                    labelType.add(" ");  // value is null
-                    labelType.add(" ");  // size is null //******CHECK******
-                    SymTable.add(labelType); // add to symbol table
+                    if(!SymTable.valid(labelName)){
+                        labelType.add(split[0].substring(0, split[0].length()-1));  // adding label name
+                        int offset = locationCounter;
+                        labelType.add(offset); //  adding offset
+                        labelType.add("Label");  // the type is label
+                        labelType.add(" ");  // value is null
+                        labelType.add(" ");  // size is null //******CHECK******
+                        SymTable.add(labelType); // add to symbol table
+                    }
+                    else{  // if label is already defined
+                        ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
+                        System.out.println("ERROR in line " + lineNo + " : " + labelName +" is already defined");
+                    }
                 }
 
                 else{ // label is not present
@@ -120,10 +128,10 @@ class Assembler{
                 if(!OpCode.valid(split[pos])) {  // if opcode is not present in the valid opcodes
                     if(!MacTable.valid(split[pos])) {   // if the opcode is not a macrotable either
                         ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
-//                        MacTable.printTable();
                         System.out.println("ERROR in line " + lineNo + " : " + split[pos] +" IS NEITHER AN OPCODE NOR A MACRO!");
                     }
                     else {
+                        // Class Cast Exception
                         int MacroParameters = MacTable.getParameters(split[pos]);
                         if(parameters==MacroParameters) {
                             locationCounter += MacTable.getSize(split[pos]);
@@ -147,6 +155,10 @@ class Assembler{
                     }
                     try {
                         opcodeType.add(split[pos + 1]); // adding operand 1
+                        String operand1 = split[pos + 1];
+                        if(operand1.charAt(0) == 'L'){  // this is a label
+                            foundSymbols.put(operand1, lineNo);
+                        }
                         if(split[pos + 1].charAt(0) == '\''){
                             // this is a literal. Literal is of the form '=[value]'
                             ArrayList<Object> literalType = new ArrayList<Object>();
@@ -167,6 +179,19 @@ class Assembler{
                     locationCounter += 12;   //******CHECK******
                 }
             }
+            last = line;
+        }
+        for(Map.Entry<String, Integer> entry : foundSymbols.entrySet()){
+            String key = entry.getKey();
+            Integer value = entry.getValue();
+            if(!SymTable.valid(key)){
+                ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
+                System.out.println("ERROR in line " + value + " : " + "label " + key + " is not defined");
+            }
+        }
+        if(!last.equals("STP")){
+            ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
+            System.out.println("ERROR in line " + lineNo + " : " + "STP statement is not present!");
         }
         fw.close();
         System.out.print("Symbol Table");
@@ -190,8 +215,8 @@ class Assembler{
             String address, opcodeBinary, operandBinary;
             String line = sn.nextLine();
             String[] split = line.split("\\s+");  // splitting the lines in the code by spaces
-            
-              //Getting Address
+
+            //Getting Address
             address = Integer.toBinaryString(locationCounter);
             while(address.length()<10) {
                 address = "0"+address;
@@ -204,10 +229,10 @@ class Assembler{
             //Converting Opcode to binary
             OPCode = split[pos];
             opcodeBinary = OpCode.getBitcode(OPCode);
-            
+
             fw.write(locationCounter+" "+ OPCode +"\n");
             fw.write(address+" "+opcodeBinary+" ");
-            
+
             //Getting operand and their binaries
             for(int i = pos+1; i < split.length; i++) {
                 operand = split[i];
@@ -226,7 +251,7 @@ class Assembler{
             fw.write("\n");
             locationCounter += 12;   //******CHECK******
         }
-        
+
         fw.close();
         sn.close();
     }
@@ -237,9 +262,9 @@ public class Main {
     public static void main(String[] args) throws IOException {
         // TODO Auto-generated method stub
         Assembler A = new Assembler();
-        File Code = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\input.txt");
-        File Intermediate = new File("C:\\Users\\Harsh Kumar Sethi\\Desktop\\Intermediate.txt");
-        File Output = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\output.txt");
+        File Code = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Raw Code - Macro + Error Handling/input.txt");
+        File Intermediate = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Raw Code - Macro + Error Handling/Intermediate.txt");
+        File Output = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Raw Code - Macro + Error Handling/output.txt");
         try {
 //            A.Assemble(Code);
             A.passOne(Code, Intermediate);
