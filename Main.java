@@ -155,8 +155,11 @@ class Assembler{
                     }
                     try {
                         opcodeType.add(split[pos + 1]); // adding operand 1
-                        String operand1 = split[pos + 1];
-                        if(operand1.charAt(0) == 'L'){  // this is a label
+                        try{
+                            int operand1 = Integer.valueOf(split[pos + 1]);
+                        }
+                        catch(NumberFormatException e){
+                            String operand1 = split[pos + 1];
                             foundSymbols.put(operand1, lineNo);
                         }
                         if(split[pos + 1].charAt(0) == '\''){
