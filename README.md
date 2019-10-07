@@ -14,4 +14,4 @@ We have implemented a two pass assembler. Java programming language has been use
  This is for handling literals. It stores the name and operands associated with the operation.
 
  ### First Pass
- 
+ In the first pass, we iterate over the assembly code once and fill the tables that were explained above. The address of the first instruction is zero. The length of the instruction is added to the location counter. The address of the next instruction is the value that is stored in the location counter. And this process continues till addresses are assigned to all the instructions. 
