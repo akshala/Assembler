@@ -20,7 +20,9 @@ In the first pass, we iterate over the assembly code once and fill the tables th
 * If the macro has already been defined then an error message is shown. If the name of the macro defined is the same as one of the given opcode names then also an error message would be shown.
 * A label would end with the symbol ':'. After the label an instruction would follow. When a label is encountered it would be stored in the label table along with its address.
 * If a label is defined more than once then an error message is shown.
-* For an instruction, we identify if the opcode is either present in the macro table or it is one of the given opcodes, If it is neither then an error message is shown. If it is a macro that has already been defined then the location couter is incremented by the size of the macro and nothing else is done. If the opcode is one of the given opcodes, then it is added to the opcode table along with the operands if they are present.
+* For an instruction, we identify if the opcode is either present in the macro table or it is one of the given opcodes, If it is neither then an error message is shown. 
+* If it is a macro that has already been defined then the location couter is incremented by the size of the macro and nothing else is done. 
+* If the opcode is one of the given opcodes, then it is added to the opcode table along with the operands if they are present.
 * Forward referencing is done in the first pass. If there is a symbol which has not been found even at the end of the first pass then an error message is shown. 
 * If the input file does not have a stop statement in the end which is indicated by the keyword 'STP' then an error is shown.
 
