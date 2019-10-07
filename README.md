@@ -14,6 +14,8 @@ We have implemented a two pass assembler. Java programming language has been use
  This is for handling literals. It stores the name and operands associated with the operation.
 
  ### First Pass
- In the first pass, we iterate over the assembly code once and fill the tables that were explained above. The address of the first instruction is zero. The length of the instruction is added to the location counter. The address of the next instruction is the value that is stored in the location counter. And this process continues till addresses are assigned to all the instructions. 
+In the first pass, we iterate over the assembly code once and fill the tables that were explained above. The address of the first instruction is zero. The length of the instruction is added to the location counter. The address of the next instruction is the value that is stored in the location counter. And this process continues till addresses are assigned to all the instructions. 
+* A line starting with // is treated as a comment and no further processing is done for this line. 
+* A macro definition would be a line containing the name of the macro followed by the keyword MACRO and the parameters if they are present. The end of the macro is indicated by the keyword MEND. The name, address, size and definition of the macro are stored in the macro table. If the macro has already been defined then an error message is shown. 
 
 ### Second Pass
