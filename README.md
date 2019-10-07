@@ -19,6 +19,6 @@ In the first pass, we iterate over the assembly code once and fill the tables th
 * A macro definition would be a line containing the name of the macro followed by the keyword MACRO and the parameters if they are present. The end of the macro is indicated by the keyword MEND. The name, address, size and definition of the macro are stored in the macro table. 
 * If the macro has already been defined then an error message is shown. If the name of the macro defined is the same as one of the given opcode names then also an error message would be shown.
 * A label would have the keyword L followed by a number and ':'. After the label an instruction would follow. When a label is encountered it would be stores in the label table along with its address.
-* 
+* For an instruction, we identify if the opcode is either present in the macro table or it is one of the given opcodes, If it is neither then an error message is shown. If it is a macro that has already been defined then the location couter is incremented by the size of the macro and nothing else is done. If the opcode is one of the given opcodes, then it is added to the opcode table along with the operands if they are present.
 
 ### Second Pass
