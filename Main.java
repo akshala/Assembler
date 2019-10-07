@@ -1,6 +1,9 @@
+import javax.crypto.Mac;
 import java.util.*;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 
 class Assembler{
     private final Opcodes OpCode;
@@ -8,6 +11,7 @@ class Assembler{
     private MacroTable MacTable;
     private LiteralTable LitTable;
     private OpCodeTable OpTable;
+    private int lineNo;
 
     Assembler(){
         OpCode = new Opcodes();
@@ -15,113 +19,231 @@ class Assembler{
         MacTable = new MacroTable();
         LitTable = new LiteralTable();
         OpTable = new OpCodeTable();
+        lineNo = 0;
     }
 
-    void Assemble(File Code) throws FileNotFoundException{
-        //Use any file iterator as per your convenience. Using scanner just to the code
-        Scanner sn = new Scanner(Code);
-        while(sn.hasNextLine()) {
-            String line = sn.nextLine();
-            System.out.println(line);
-        }
-    }
-
-    void passOne(File Code) throws FileNotFoundException{
+    void passOne(File Code, File intermediate) throws IOException{
+        FileWriter fw = new FileWriter(intermediate);
         int locationCounter = 0;
         Scanner sn = new Scanner(Code);
         while(sn.hasNextLine()) {
-            String line = sn.nextLine();
-            if(line == "\n" || line == " " || line == null || line.isEmpty() || line.isEmpty()){ // if it is a blank lne
+            String line = sn.nextLine();lineNo++;
+            
+            //Removing comments if any from the given line
+            String[] RemoveComment = line.split("/");
+            line = RemoveComment[0];
+            
+            if(line == "\n" || line == " " || line == null || line.isEmpty() || line.isEmpty()){ // if it is a blank line
                 continue;
             }
+            if(line.toUpperCase().contains("MACRO")){ // finding if macro definition is present
+//                System.out.println("macro " + line);
+                String[] split = line.split("\\s");  // splitting on spaces
+                String MacroName = split[0].trim();  // name of the macro
+                MacroName = MacroName.replaceAll("^\\s+", "");
+                MacroName = MacroName.replaceAll(" ", "");
+                if(MacroName.charAt(0) == ' '){
+                    MacroName = MacroName.substring(1, MacroName.length());
+                }
+                if(OpCode.valid(MacroName)){  // if the opcode of this name is already present
+                    ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
+                    System.out.println("ERROR in line " + lineNo+" : OPCODE " + MacroName + " IS ALREADY PRESENT.");
+                    line = sn.nextLine();lineNo++;
+//                    System.out.println(line);
+                    while(!line.toUpperCase().contains("MEND")) { // end of macro
+                        line = sn.nextLine();lineNo++;
+//                        System.out.println(line);
+                    }
+                    continue;
+                }
+                else if(MacTable.valid(MacroName)){  // if macro of this name has already been defined
+                    ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
+                    System.out.println("ERROR in line " + lineNo +" "+ MacroName + " HAS ALREADY BEEN DEFINED.");
+                    line = sn.nextLine();lineNo++;
+                    while(!line.toUpperCase().contains("MEND")) { // end of macro
+                        line = sn.nextLine();lineNo++;
+                    }
+                    continue;
+                }
+                else{
+                    int parametersNo = split.length - 2;
+                    int size = 0;
+                    int address = locationCounter;
+                    ArrayList<String> parameters = new ArrayList<String>();
+                    for(int i = 0; i < parametersNo; i ++) {
+                        parameters.add(split[3+i]);
+                    }
+                    StringBuilder def = new StringBuilder();
+                    line = sn.nextLine();lineNo++;
+//                    System.out.println(line);
+                    while(!line.toUpperCase().contains("MEND")) { // end of macro
+                        def.append(line).append("\n");   // macro definition
+                        line = sn.nextLine();lineNo++;
+//                        System.out.println(line);
+                        size += 12;
+                    }
+                    ArrayList<Object> Macro = new ArrayList<Object>();
+                    Macro.add(MacroName);  // adding macro name
+                    Macro.add(address);   // adding macro address
+                    Macro.add(size);   // adding macro size
+                    Macro.add(def.toString());   // adding macro definition
+                    Macro.add(parametersNo);
+                    Macro.add(parameters);
+                    MacTable.add(Macro);  // adding to macro table
+                    continue;
+                }
+            }
             String[] split = line.split("\\s+");  // splitting the lines in the code by spaces
-//            for(String element: split){
-//                System.out.print(element + " ");
-//            }
-//            System.out.println();
-//            System.out.println(split[0]);
-            if ((!split[0].isEmpty() && split[0] != " " && split[0].charAt(0) != '/') || split[0].isEmpty()){    //This is not a comment in the code, taking comments as lines starting with /
-//                    split[0] can be a space " " but this would not be a label but an opcode instruction
-                try{
-                    if(!split[0].isEmpty()){ // first character is not empty
-                        if(split[0].substring(split[0].length() - 1).equals(":")){ // label is present
-                            ArrayList<Object> labelType = new ArrayList<Object>();
-                            labelType.add(split[0]);  // adding symbol
-                            int offset = locationCounter;
-                            labelType.add(offset); //  adding offset
-                            labelType.add("Label");  // the type is label
-                            labelType.add(" ");  // value is null
-                            labelType.add(" ");  // size is null //******CHECK******
-                            SymTable.add(labelType); // add to symbol table
-                            ArrayList<Object> opcodeType = new ArrayList<Object>();
-                            opcodeType.add(split[1]); // adding opcode
-                            try {
-                                opcodeType.add(split[2]); // adding operand 1
-                                if(split[2].charAt(0) == '\''){
-                                    // this is a literal. Literal is of the form '=[value]'
-                                    ArrayList<Object> literalType = new ArrayList<Object>();
-                                    literalType.add(""); // name
-                                    literalType.add(locationCounter); // address
-                                    String val_str = split[2].replace("\'", "");
-                                    val_str = split[2].replace("=", "");
-                                    int value = Integer.parseInt(val_str);
-                                    literalType.add(value); // value
-                                    literalType.add(4);  // size  //******CHECK******
-                                }
+
+            if ((!split[0].isEmpty() && split[0] != " " && split[0].charAt(0) != '/') || split[0].isEmpty()){
+                int pos;
+                String labelName="";
+                //This is not a comment in the code, taking comments as lines starting with /
+                if(split[0].substring(split[0].length() - 1).equals(":")){ // label is present
+                    pos = 1;
+                    ArrayList<Object> labelType = new ArrayList<Object>();
+                    labelName = split[0].substring(0, split[0].length()-1);
+                    labelType.add(split[0].substring(0, split[0].length()-1));  // adding label name
+                    int offset = locationCounter;
+                    labelType.add(offset); //  adding offset
+                    labelType.add("Label");  // the type is label
+                    labelType.add(" ");  // value is null
+                    labelType.add(" ");  // size is null //******CHECK******
+                    SymTable.add(labelType); // add to symbol table
+                }
+
+                else{ // label is not present
+                    pos = 0;
+                }
+                int parameters = split.length-pos-1;
+                ArrayList<Object> opcodeType = new ArrayList<Object>();
+                if(!OpCode.valid(split[pos])) {  // if opcode is not present in the valid opcodes
+                    if(!MacTable.valid(split[pos])) {   // if the opcode is not a macrotable either
+                        ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
+//                        MacTable.printTable();
+                        System.out.println("ERROR in line " + lineNo + " : " + split[pos] +" IS NEITHER AN OPCODE NOR A MACRO!");
+                    }
+                    else {
+                        int MacroParameters = MacTable.getParameters(split[pos]);
+                        if(parameters==MacroParameters) {
+                            locationCounter += MacTable.getSize(split[pos]);
+                            ArrayList<String> operands = new ArrayList<String>();
+                            for(int i = pos+1; i<MacroParameters; i++) {
+                                operands.add(split[i]);
                             }
-                            catch(ArrayIndexOutOfBoundsException e){
-                                // in case there is no operand
-                            }
-                            OpTable.add(opcodeType); // add to opcode table
-                            locationCounter += 12;   //******CHECK******
+                            String MacroExpansion = labelName+MacTable.expand(split[pos],operands);
+                            fw.write(labelName+MacroExpansion+"\n");
                         }
-                        else{ // label is not present
-                            ArrayList<Object> opcodeType = new ArrayList<Object>();
-                            opcodeType.add(split[0]); // adding opcode
-                            try {
-                                opcodeType.add(split[1]); // adding operand 1
-                                if(split[1].charAt(0) == '\''){
-                                    // this is a literal. Literal is of the form '=[value]'
-                                    ArrayList<Object> literalType = new ArrayList<Object>();
-                                    literalType.add(""); // name
-                                    literalType.add(locationCounter); // address
-                                    String val_str = split[2].replace("\'", "");
-                                    val_str = split[2].replace("=", "");
-                                    int value = Integer.parseInt(val_str);
-                                    literalType.add(value); // value
-                                    literalType.add(4);  // size  //******CHECK******
-                                }
-                            }
-                            catch(StringIndexOutOfBoundsException e){
-                                // in case there is no operand
-                            }
-                            OpTable.add(opcodeType); // add to opcode table
-                            locationCounter += 12;   //******CHECK******
+                        else {
+                            System.out.println("ERROR in line " + lineNo + " : " + split[pos] +" takes "+MacroParameters + " Parameters");
                         }
                     }
                 }
-                catch(IndexOutOfBoundsException e){
-
+                else {
+                    opcodeType.add(split[pos]); // adding opcode
+                    int OpCodeParameters = OpCode.getParameters(split[pos]);
+                    if(parameters != OpCodeParameters) {
+                        System.out.println("ERROR in line " + lineNo + " : " + split[pos] +" takes "+OpCodeParameters + " Parameters");
+                    }
+                    try {
+                        opcodeType.add(split[pos + 1]); // adding operand 1
+                        if(split[pos + 1].charAt(0) == '\''){
+                            // this is a literal. Literal is of the form '=[value]'
+                            ArrayList<Object> literalType = new ArrayList<Object>();
+                            literalType.add(""); // name
+                            literalType.add(locationCounter); // address
+                            String val_str = split[pos + 1].replace("\'", "");
+                            val_str = split[2].replace("=", "");
+                            int value = Integer.parseInt(val_str);
+                            literalType.add(value); // value
+                            literalType.add(4);  // size  //******CHECK******
+                        }
+                    }
+                    catch(ArrayIndexOutOfBoundsException e){
+                        // in case there is no operand
+                    }
+                    OpTable.add(opcodeType); // add to opcode table
+                    fw.write(line+"\n");
+                    locationCounter += 12;   //******CHECK******
                 }
             }
         }
+        fw.close();
         System.out.print("Symbol Table");
         SymTable.printTable();
         System.out.print("Literal Table");
         LitTable.printTable();
         System.out.print("Opcode Table");
         OpTable.printTable();
+        System.out.println("Macro Table");
+        MacTable.printTable();
+        sn.close();
+    }
+    void passTwo(File Code, File Output) throws IOException{
+        lineNo = 0;
+        FileWriter fw = new FileWriter(Output);
+        int locationCounter = 0;
+        String operand;
+        String OPCode;
+        Scanner sn = new Scanner(Code);
+        while(sn.hasNextLine()) {
+            String address, opcodeBinary, operandBinary;
+            String line = sn.nextLine();
+            String[] split = line.split("\\s+");  // splitting the lines in the code by spaces
+            
+              //Getting Address
+            address = Integer.toBinaryString(locationCounter);
+            while(address.length()<10) {
+                address = "0"+address;
+            }
+            int pos=0;
+            //Getting Opcode Position label is present
+            if(split[0].substring(split[0].length() - 1).equals(":")){ // label is present
+                pos = 1;
+            }
+            //Converting Opcode to binary
+            OPCode = split[pos];
+            opcodeBinary = OpCode.getBitcode(OPCode);
+            
+            fw.write(locationCounter+" "+ OPCode +"\n");
+            fw.write(address+" "+opcodeBinary+" ");
+            
+            //Getting operand and their binaries
+            for(int i = pos+1; i < split.length; i++) {
+                operand = split[i];
+                int val = 0;
+                try {
+                    val = Integer.parseInt(operand);
+                }
+                catch(Exception e) {
+                    val = SymTable.findAddress(operand);
+                }
+                finally {
+                    operandBinary = Integer.toBinaryString(val);
+                    fw.write(operandBinary+" ");
+                }
+            }
+            fw.write("\n");
+            locationCounter += 12;   //******CHECK******
+        }
+        
+        fw.close();
+        sn.close();
     }
 }
+
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // TODO Auto-generated method stub
         Assembler A = new Assembler();
-        File Code = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Assembler-master/input.txt");
+        File Code = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\input.txt");
+        File Intermediate = new File("C:\\Users\\Harsh Kumar Sethi\\Desktop\\Intermediate.txt");
+        File Output = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\output.txt");
         try {
 //            A.Assemble(Code);
-            A.passOne(Code);
+            A.passOne(Code, Intermediate);
+            A.passTwo(Intermediate, Output);
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             System.out.println("Wrong File: Cannot Assemble");
