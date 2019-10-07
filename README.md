@@ -20,5 +20,7 @@ In the first pass, we iterate over the assembly code once and fill the tables th
 * If the macro has already been defined then an error message is shown. If the name of the macro defined is the same as one of the given opcode names then also an error message would be shown.
 * A label would have the keyword L followed by a number and ':'. After the label an instruction would follow. When a label is encountered it would be stores in the label table along with its address.
 * For an instruction, we identify if the opcode is either present in the macro table or it is one of the given opcodes, If it is neither then an error message is shown. If it is a macro that has already been defined then the location couter is incremented by the size of the macro and nothing else is done. If the opcode is one of the given opcodes, then it is added to the opcode table along with the operands if they are present.
+* Forward referencing is done in the first pass. IIf there is a symbol which has not been found even at the end of the first pass then an error message is shown. 
 
 ### Second Pass
+The final object code is generated in the second pass. The values of opcodes and operands in binary are fetched from the opcode table. For a macro call, the definition of the macro is taken from the macro table and a macro expansion is done. For labels, the address of the label is taken from the symbol table. The object code is written in a txt file. 
