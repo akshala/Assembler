@@ -113,7 +113,7 @@ class MacroTable extends Table{
         // TODO Auto-generated method stub
         for(ArrayList<Object> A : Rows) {
             if(A.get(0).equals(string)) {
-                return (int) A.get(3);
+                return (int) A.get(4);
             }
         }
         return 0;
@@ -123,14 +123,20 @@ class MacroTable extends Table{
     public String expand(String string, ArrayList<String> operands) {
         // TODO Auto-generated method stub
         HashMap<String,String> Parameters = new HashMap<String,String>();
-        ArrayList<String> Actual = null;
+        ArrayList<String> Actual = new ArrayList<String>();
         int num = 0;
-        String definition = null;
+        String definition = "";
+        System.out.println(Rows);
         for(ArrayList<Object> A : Rows) {
-            if(A.get(0).equals(string)) {
-                Actual = (ArrayList<String>) A.get(4);
-                num = (int) A.get(3);
-                definition = (String) A.get(2);
+            if(A == null)
+                break;
+            else {
+                System.out.println(A);
+                if(A.get(0).equals(string)) {
+                    Actual = (ArrayList<String>) A.get(5);
+                    num = (int) A.get(4);
+                    definition = (String) A.get(3);
+                }
             }
         }
         for(int i = 0; i < num; i ++) {
