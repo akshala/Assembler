@@ -171,16 +171,16 @@ class Assembler{
                             String operand1 = split[pos + 1];
                             foundSymbols.put(operand1, lineNo);
                         }
-                        if(split[pos + 1].charAt(0) == '\''){
+                        if(split[pos + 1].charAt(0) == '\'' && split[pos + 1].charAt(1) == '='){
                             // this is a literal. Literal is of the form '=[value]'
                             ArrayList<Object> literalType = new ArrayList<Object>();
                             literalType.add(""); // name
                             literalType.add(locationCounter); // address
-                            String val_str = split[pos + 1].replace("\'", "");
-                            val_str = split[2].replace("=", "");
+                            String val_str = split[pos + 1].substring(2,split[pos+1].length());
                             int value = Integer.parseInt(val_str);
                             literalType.add(value); // value
                             literalType.add(4);  // size  //******CHECK******
+                            LitTable.add(literalType);
                         }
                     }
                     catch(ArrayIndexOutOfBoundsException e){
