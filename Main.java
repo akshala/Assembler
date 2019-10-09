@@ -256,7 +256,7 @@ class Assembler{
                     }
                 }
                 catch(Exception e) {
-                    val = SymTable.findAddress(operand);
+                    val = LitTable.findAddress(operand);
                 }
                 finally {
                     operandBinary = Integer.toBinaryString(val);
