@@ -43,6 +43,46 @@ public class Table {
     }
 }
 
+class LabelTable extends Table{
+
+    LabelTable() {  // mainly for labels
+        super(5);
+        // TODO Auto-generated constructor stub
+        ArrayList<Object> A = new ArrayList<Object>();
+        A.add("Label");
+        A.add("Offset");
+        A.add("Type");
+        A.add("Value");
+        A.add("Size");
+        add(A);
+    }
+
+    public void GetLabels(){
+        for(int i = 1; i < count; i ++) {
+//            System.out.println(Rows[i].get(0));
+        }
+    }
+    public void modifyAddress(int index, int address) {
+        Rows[index].set(1, address);
+    }
+
+    public boolean valid(String string) {   // if a particular label is present in the macro table or not
+        // TODO Auto-generated method stub
+        boolean found = false;
+        for(ArrayList<Object> A : Rows) {
+            if(A != null) {
+                if(A.get(0).equals(string)) {
+                    return true;
+                }
+            }
+            else
+                return false;
+        }
+        return false;
+    }
+
+}
+
 class SymbolTable extends Table{
 
     SymbolTable() {  // mainly for labels
@@ -62,11 +102,15 @@ class SymbolTable extends Table{
 //            System.out.println(Rows[i].get(0));
         }
     }
+    public void modifyAddress(int index, int address) {
+        Rows[index].set(1, address);
+    }
+
     public void ModifyDetails(int index, ArrayList<Object> A) {
         Rows[index] = A;
     }
 
-    public boolean valid(String string) {   // if a particular label is present in the macro table or not
+    public boolean valid(String string) {   // if a particular variable is present in the macro table or not
         // TODO Auto-generated method stub
         boolean found = false;
         for(ArrayList<Object> A : Rows) {
@@ -154,7 +198,7 @@ class MacroTable extends Table{
                 }
             }
         }
-        
+
         for(int i = 0; i < num; i ++) {
             Parameters.put(Actual.get(i), operands.get(i));
         }
@@ -168,7 +212,7 @@ class MacroTable extends Table{
                 }
                 output+=lines[i]+" ";
             }
-            output+="\n";            
+            output+="\n";
         }
         output.strip();
         return output;
@@ -186,6 +230,10 @@ class LiteralTable extends Table{
         A.add("Value");
         A.add("Size");
         add(A);
+    }
+
+    public void modifyAddress(int index, int address) {
+        Rows[index].set(1, address);
     }
 }
 

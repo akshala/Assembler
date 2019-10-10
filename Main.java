@@ -7,6 +7,7 @@ import java.io.IOException;
 
 class Assembler{
     private final Opcodes OpCode;
+    private LabelTable LabTable;
     private SymbolTable SymTable;
     private MacroTable MacTable;
     private LiteralTable LitTable;
@@ -15,7 +16,7 @@ class Assembler{
 
     Assembler(){
         OpCode = new Opcodes();
-        SymTable = new SymbolTable();
+        LabTable = new LabelTable();
         MacTable = new MacroTable();
         LitTable = new LiteralTable();
         OpTable = new OpCodeTable();
@@ -108,20 +109,45 @@ class Assembler{
 
             if ((!split[0].isEmpty() && split[0] != " " && split[0].charAt(0) != '/') || split[0].isEmpty()){
                 int pos;
+
+                if(split[1].equals("DW")){ // this is a variable declaration
+                    if(SymTable.find(split[0]) != -1){ // if symbol is already present in the table, update it with value
+                        ArrayList<Object> variableType = new ArrayList<Object>();
+                        variableType.add(split[0]); // adding symbol
+                        variableType.add(SymTable.findAddress(split[2])); // take address which was already stored Offset
+                        variableType.add("Variable"); // type is variable
+                        variableType.add(split[2]); // value
+                        int size = 4; // size ******CHECK******
+                        variableType.add(size);
+                        SymTable.ModifyDetails(SymTable.find(split[2]), variableType);
+                    }
+                    else{ // if variable was not already in the table
+                        ArrayList<Object> variableType = new ArrayList<Object>();
+                        variableType.add(split[0]); // adding symbol
+                        variableType.add(locationCounter); // take address which was already stored Offset    //******CHECK******
+                        variableType.add("Variable"); // type is variable
+                        variableType.add(split[2]); // value
+                        int size = 4; // size ******CHECK******
+                        variableType.add(size);
+                        SymTable.add(variableType);
+                    }
+                    locationCounter += 12;   //******CHECK******
+                }
+
                 String labelName="";
                 //This is not a comment in the code, taking comments as lines starting with /
                 if(split[0].substring(split[0].length() - 1).equals(":")){ // label is present
                     pos = 1;
                     ArrayList<Object> labelType = new ArrayList<Object>();
                     labelName = split[0].substring(0, split[0].length()-1);
-                    if(!SymTable.valid(labelName)){
+                    if(!LabTable.valid(labelName)){
                         labelType.add(split[0].substring(0, split[0].length()-1));  // adding label name
                         int offset = locationCounter;
                         labelType.add(offset); //  adding offset
                         labelType.add("Label");  // the type is label
                         labelType.add(" ");  // value is null
                         labelType.add(" ");  // size is null //******CHECK******
-                        SymTable.add(labelType); // add to symbol table
+                        LabTable.add(labelType); // add to symbol table
                     }
                     else{  // if label is already defined
                         ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
@@ -175,12 +201,25 @@ class Assembler{
                             // this is a literal. Literal is of the form '=[value]'
                             ArrayList<Object> literalType = new ArrayList<Object>();
                             literalType.add(""); // name
-                            literalType.add(locationCounter); // address
+                            literalType.add(0); // address
                             String val_str = split[pos + 1].substring(2,split[pos+1].length());
                             int value = Integer.parseInt(val_str);
                             literalType.add(value); // value
                             literalType.add(4);  // size  //******CHECK******
                             LitTable.add(literalType);
+                        }
+                        else {
+                            // if it is a variable
+                            if (SymTable.find(split[pos + 1]) == -1) {   // if variable was not already in the table
+                                ArrayList<Object> variableType = new ArrayList<Object>();
+                                variableType.add(split[pos + 1]); // adding symbol
+                                variableType.add(0); // take address which was already stored Offset    //******CHECK******
+                                variableType.add("Variable"); // type is variable
+                                variableType.add(0); // value
+                                int size = 4; // size ******CHECK******
+                                variableType.add(size);
+                                SymTable.add(variableType);
+                            }
                         }
                     }
                     catch(ArrayIndexOutOfBoundsException e){
@@ -193,10 +232,18 @@ class Assembler{
             }
             last = line;
         }
+        for(int i=0; i<LitTable.count; i++){
+            LitTable.modifyAddress(i, locationCounter);
+            locationCounter++;
+        }
+        for(int i=0; i<SymTable.count; i++){
+            SymTable.modifyAddress(i, locationCounter);
+            locationCounter++;
+        }
         for(Map.Entry<String, Integer> entry : foundSymbols.entrySet()){
             String key = entry.getKey();
             Integer value = entry.getValue();
-            if(!SymTable.valid(key)){
+            if(!LabTable.valid(key)){
                 ///////////////////////////////////////////             ERROR   HANDLED         //////////////////////////////////////
                 System.out.println("ERROR in line " + value + " : " + "label " + key + " is not defined");
             }
@@ -207,7 +254,7 @@ class Assembler{
         }
         fw.close();
 //        System.out.print("Symbol Table");
-//        SymTable.printTable();
+//        LabTable.printTable();
 //        System.out.print("Literal Table");
 //        LitTable.printTable();
 //        System.out.print("Opcode Table");
@@ -256,9 +303,12 @@ class Assembler{
                     }
                 }
                 catch(Exception e) {
-                    val = SymTable.findAddress(operand);
+                    val = LabTable.findAddress(operand);
                     if(val == -1){
                         val = LitTable.find(operand);
+                    }
+                    if(val == -1){
+                        val = SymTable.find(operand);
                     }
                 }
                 finally {
@@ -284,9 +334,9 @@ public class Main {
     public static void main(String[] args) throws IOException {
         // TODO Auto-generated method stub
         Assembler A = new Assembler();
-        File Code = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\inputs\\input.txt");
-        File Intermediate = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\\\\\\\inputs\\\\Intermediate.txt");
-        File Output = new File("C:\\Users\\Harsh Kumar Sethi\\Desktop\\\\inputs\\output.txt");
+        File Code = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Raw Code - Macro + Error Handling/input.txt");
+        File Intermediate = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Raw Code - Macro + Error Handling/Intermediate.txt");
+        File Output = new File("/home/akshala/Documents/IIITD/thirdSem/CO/Project/Raw Code - Macro + Error Handling/output.txt");
         try {
 //            A.Assemble(Code);
             A.passOne(Code, Intermediate);
@@ -298,3 +348,6 @@ public class Main {
         }
     }
 }
+
+
+
