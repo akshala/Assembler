@@ -109,31 +109,15 @@ class Assembler{
 
             if ((!split[0].isEmpty() && split[0] != " " && split[0].charAt(0) != '/') || split[0].isEmpty()){
                 int pos;
-
-                if(split[1].equals("DW")){ // this is a variable declaration
-                    if(SymTable.find(split[0]) != -1){ // if symbol is already present in the table, update it with value
-                        ArrayList<Object> variableType = new ArrayList<Object>();
-                        variableType.add(split[0]); // adding symbol
-                        variableType.add(SymTable.findAddress(split[2])); // take address which was already stored Offset
-                        variableType.add("Variable"); // type is variable
-                        variableType.add(split[2]); // value
-                        int size = 4; // size ******CHECK******
-                        variableType.add(size);
-                        SymTable.ModifyDetails(SymTable.find(split[2]), variableType);
+                if(split[0].equals("START")) {
+                    try{
+                        locationCounter = Integer.parseInt(split[1]); // if start location is given
                     }
-                    else{ // if variable was not already in the table
-                        ArrayList<Object> variableType = new ArrayList<Object>();
-                        variableType.add(split[0]); // adding symbol
-                        variableType.add(locationCounter); // take address which was already stored Offset    //******CHECK******
-                        variableType.add("Variable"); // type is variable
-                        variableType.add(split[2]); // value
-                        int size = 4; // size ******CHECK******
-                        variableType.add(size);
-                        SymTable.add(variableType);
+                    catch(ArrayIndexOutOfBoundsException e){  // if no start location start at address 0
+                        locationCounter = 0;
                     }
-                    locationCounter += 12;   //******CHECK******
+                    continue;
                 }
-
                 String labelName="";
                 //This is not a comment in the code, taking comments as lines starting with /
                 if(split[0].substring(split[0].length() - 1).equals(":")){ // label is present
