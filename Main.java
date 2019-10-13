@@ -17,6 +17,7 @@ class Assembler{
     Assembler(){
         OpCode = new Opcodes();
         LabTable = new LabelTable();
+        SymTable = new SymbolTable();
         MacTable = new MacroTable();
         LitTable = new LiteralTable();
         OpTable = new OpCodeTable();
@@ -106,10 +107,13 @@ class Assembler{
                 }
             }
             String[] split = line.split("\\s+");  // splitting the lines in the code by spaces
-
+            System.out.println(line);
             if ((!split[0].isEmpty() && split[0] != " " && split[0].charAt(0) != '/') || split[0].isEmpty()){
                 int pos;
-                System.out.println(split[0]);
+                int ascii = (split[0].charAt(0));
+                if(ascii == 65279){
+                    split[0] = split[0].substring(1, split[0].length());
+                }
                 if(split[0].equals("START")) {
                     try{
                         locationCounter = Integer.parseInt(split[1]); // if start location is given
@@ -122,7 +126,6 @@ class Assembler{
                 else{
                     String labelName="";
                     //This is not a comment in the code, taking comments as lines starting with /
-                    System.out.println(split[0]);
                     if(split[0].substring(split[0].length() - 1).equals(":")){ // label is present
                         pos = 1;
                         ArrayList<Object> labelType = new ArrayList<Object>();
@@ -197,16 +200,14 @@ class Assembler{
                             }
                             else {
                                 // if it is a variable
-                                if (SymTable.find(split[pos + 1]) == -1) {   // if variable was not already in the table
-                                    ArrayList<Object> variableType = new ArrayList<Object>();
-                                    variableType.add(split[pos + 1]); // adding symbol
-                                    variableType.add(0); // take address which was already stored Offset    //******CHECK******
-                                    variableType.add("Variable"); // type is variable
-                                    variableType.add(0); // value
-                                    int size = 4; // size ******CHECK******
-                                    variableType.add(size);
-                                    SymTable.add(variableType);
-                                }
+                                ArrayList<Object> variableType = new ArrayList<Object>();
+                                variableType.add(split[pos + 1]); // adding symbol
+                                variableType.add(0); // take address which was already stored Offset    //******CHECK******
+                                variableType.add("Variable"); // type is variable
+                                variableType.add(0); // value
+                                int size = 4; // size ******CHECK******
+                                variableType.add(size);
+                                SymTable.add(variableType);
                             }
                         }
                         catch(ArrayIndexOutOfBoundsException e){
