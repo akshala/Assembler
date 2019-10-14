@@ -107,7 +107,6 @@ class Assembler{
                 }
             }
             String[] split = line.split("\\s+");  // splitting the lines in the code by spaces
-            System.out.println(line);
             if ((!split[0].isEmpty() && split[0] != " " && split[0].charAt(0) != '/') || split[0].isEmpty()){
                 int pos;
                 int ascii = (split[0].charAt(0));
@@ -185,7 +184,20 @@ class Assembler{
                             }
                             catch(NumberFormatException e){
                                 String operand1 = split[pos + 1];
-                                foundSymbols.put(operand1, lineNo);
+                                if(split[pos].equals("BRZ") || split[pos].equals("BRN") || split[pos].equals("BRP")){
+                                    foundSymbols.put(operand1, lineNo);
+                                }
+                                else {
+                                    // if it is a variable
+                                    ArrayList<Object> variableType = new ArrayList<Object>();
+                                    variableType.add(split[pos + 1]); // adding symbol
+                                    variableType.add(0); // take address which was already stored Offset    //******CHECK******
+                                    variableType.add("Variable"); // type is variable
+                                    variableType.add(0); // value
+                                    int size = 4; // size ******CHECK******
+                                    variableType.add(size);
+                                    SymTable.add(variableType);
+                                }
                             }
                             if(split[pos + 1].charAt(0) == '\'' && split[pos + 1].charAt(1) == '='){
                                 // this is a literal. Literal is of the form '=[value]'
@@ -197,17 +209,6 @@ class Assembler{
                                 literalType.add(value); // value
                                 literalType.add(4);  // size  //******CHECK******
                                 LitTable.add(literalType);
-                            }
-                            else {
-                                // if it is a variable
-                                ArrayList<Object> variableType = new ArrayList<Object>();
-                                variableType.add(split[pos + 1]); // adding symbol
-                                variableType.add(0); // take address which was already stored Offset    //******CHECK******
-                                variableType.add("Variable"); // type is variable
-                                variableType.add(0); // value
-                                int size = 4; // size ******CHECK******
-                                variableType.add(size);
-                                SymTable.add(variableType);
                             }
                         }
                         catch(ArrayIndexOutOfBoundsException e){
