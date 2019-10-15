@@ -44,6 +44,7 @@ The final object code is generated in the second pass. The values of opcodes and
 * Ensure that each opcode is given the correct number of opcodes. Neither less nor more.
 * Ensure that label is declared before being called by branching opcodes. To ensure that each called label is declared, forward referencing is used.
 * STP is missing
+* In case the operand > 255 it cannot be represented in 8 bits for operand in instruction length.
 
 ### Type of Error handling
 The program does not terminate after reporting one error. It continues to assemble the rest of the code and It reports all the errors in all the lines at once.
