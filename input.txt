@@ -1,18 +1,15 @@
-﻿﻿Macro add
-ADD 12
-ADD 12
-MEND
-CLA
-INP 157
-INP 158
-ABC 18
-LAC 157
-SUB 158
-BRN L1
-DSP 157
-CLA
-BRZ L2
-L1: DSP 158
-CLA
-BRZ L2
+﻿START 100
+    CLA
+    INP A
+    INP B
+    LAC A
+    SUB B
+    BRN L1
+    DSP A
+    CLA
+    BRZ L2
+L1: DSP B
+    CLA
+    BRZ L2
 L2: STP
+END
