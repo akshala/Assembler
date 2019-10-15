@@ -33,4 +33,4 @@ In the first pass, we iterate over the assembly code once and fill the tables th
 * If the input file does not have a stop statement in the end which is indicated by the keyword 'STP' then an error is shown.
 
 ### Second Pass
-The final object code is generated in the second pass. The values of opcodes and operands in binary are fetched from the opcode table. For labels, the address of the label is taken from the symbol table. The object code is written in a txt file. 
+The final object code is generated in the second pass. The values of opcodes and operands in binary are fetched from the opcode table. For labels, the address of the label is taken from the symbol table. The object code is written in a txt file. If in the first pass all symbols are not found then signals error.
