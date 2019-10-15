@@ -6,8 +6,8 @@ We have implemented a two pass assembler for a 12 bit accumulator architechture.
  ### Basic Tables used
  #### 1. Label Table
  This is for handling labels. It stores the label, offset, type, value, size of the symbol. 
-  #### 1. Symbol Table
-  This is for handling variables. It stores the variable, offset, type, value, size of the symbol. 
+ #### 1. Symbol Table
+ This is for handling variables. It stores the variable, offset, type, value, size of the symbol. 
  #### 2. Macro Table
  This is for handling macros. It stores the name, address, size and definition of the macro. 
  #### 3. Literal Table
@@ -34,3 +34,16 @@ In the first pass, we iterate over the assembly code once and fill the tables th
 
 ### Second Pass
 The final object code is generated in the second pass. The values of opcodes and operands in binary are fetched from the opcode table. For labels, the address of the label is taken from the symbol table. The object code is written in a txt file. If in the first pass all symbols are not found then signals error.
+
+### Error Handled
+* Check if the opcode is valid.
+* Check if the called variable is declared or not.
+* Ensure that each label is declared only once.
+* Ensure that macro name is not same as that of opcode.
+* Ensure no two macros have the same name.
+* Ensure that each opcode is given the correct number of opcodes. Neither less nor more.
+* Ensure that label is declared before being called by branching opcodes. To ensure that each called label is declared, forward referencing is used.
+* STP is missing
+
+### Type of Error handling
+The program does not terminate after reporting one error. It continues to assemble the rest of the code and It reports all the errors in all the lines at once.
