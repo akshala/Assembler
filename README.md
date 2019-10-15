@@ -29,7 +29,7 @@ In the first pass, we iterate over the assembly code once and fill the tables th
 * If the opcode is one of the given opcodes, then it is added to the opcode table along with the operands if they are present.
 * Forward referencing is done in the first pass. If there is a symbol which has not been found even at the end of the first pass then an error message is shown. 
 * If the operand is a variable then it is added to the symbol table. The address of the variable is assigned at the end of the program. It is assigned a one word address at the end.
-* If the operand is a literal then it is added to the literal table. The address of the literal is assigned at the end of the program. It is assigned a one word address at the end. 
+* If the operand is a literal (Literal is of the form '=[value]') then it is added to the literal table. The address of the literal is assigned at the end of the program. It is assigned a one word address at the end. 
 * If the input file does not have a stop statement in the end which is indicated by the keyword 'STP' then an error is shown.
 
 ### Second Pass
