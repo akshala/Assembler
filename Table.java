@@ -1,16 +1,34 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Table {
     private final int column;
     ArrayList<Object> Rows[];
+    HashSet<String> s = new HashSet<String>();
     int count;
     Table(int c){
         Rows = (ArrayList<Object>[]) new ArrayList<?>[100];
         column = c;
         count = 0;  // count of the number of objects in the table
     }
+    protected boolean Repeats(String Name) {
+        if(s.contains(Name)) {
+            return true;
+        }
+        else
+            return false;
+    }
     public void add(ArrayList<Object> A) {
+        if(A.get(0).getClass() == "String".getClass()) {
+           String Name = (String)A.get(0);
+           if(Repeats(Name)) {
+               return;
+           }
+           s.add(Name);
+        }
+        
         Rows[count] = new ArrayList<Object>();
         Rows[count] = A;
         count ++;
@@ -38,7 +56,7 @@ public class Table {
     }
     public void printTable() {  // prints the entire table
         for(int i = 0; i < count; i ++) {
-//            System.out.println(Rows[i]);
+            System.out.println(Rows[i]);
         }
     }
 }
@@ -59,7 +77,7 @@ class LabelTable extends Table{
 
     public void GetLabels(){
         for(int i = 1; i < count; i ++) {
-//            System.out.println(Rows[i].get(0));
+            System.out.println(Rows[i].get(0));
         }
     }
     public void modifyAddress(int index, int address) {
@@ -84,7 +102,7 @@ class LabelTable extends Table{
 }
 
 class SymbolTable extends Table{
-
+    
     SymbolTable() {  // mainly for labels
         super(5);
         // TODO Auto-generated constructor stub

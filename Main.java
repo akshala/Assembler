@@ -12,6 +12,7 @@ class Assembler{
     private MacroTable MacTable;
     private LiteralTable LitTable;
     private OpCodeTable OpTable;
+    private int startAddress=0;
     private int lineNo;
 
     Assembler(){
@@ -41,6 +42,18 @@ class Assembler{
             line = RemoveComment[0];
 
             if(line == "\n" || line == " " || line == null || line.isEmpty() || line.isEmpty()){ // if it is a blank line
+                continue;
+            }
+            String[] split1 = line.split("\\s");  // splitting on spaces
+            
+            if(split1[0].contains("START")) {
+                try{
+                    locationCounter = Integer.parseInt(split1[1]); // if start location is given
+                    startAddress = locationCounter;
+                }
+                catch(ArrayIndexOutOfBoundsException e){  // if no start location start at address 0
+                    locationCounter = 0;
+                }
                 continue;
             }
             if(line.toUpperCase().contains("MACRO")){ // finding if macro definition is present
@@ -93,7 +106,7 @@ class Assembler{
                             break;
                         }
 //                        System.out.println(line);
-                        size += 12;
+                        size += 1;
                     }
                     ArrayList<Object> Macro = new ArrayList<Object>();
                     Macro.add(MacroName);  // adding macro name
@@ -113,7 +126,7 @@ class Assembler{
                 if(ascii == 65279){
                     split[0] = split[0].substring(1, split[0].length());
                 }
-                if(split[0].equals("START")) {
+                if(split[0].contains("START")) {
                     try{
                         locationCounter = Integer.parseInt(split[1]); // if start location is given
                     }
@@ -216,18 +229,19 @@ class Assembler{
                         }
                         OpTable.add(opcodeType); // add to opcode table
                         fw.write(line+"\n");
-                        locationCounter += 12;   //******CHECK******
+                        locationCounter += 1;   //******CHECK******
                     }
                 }
             }
             last = line;
         }
-        for(int i=0; i<LitTable.count; i++){
-            LitTable.modifyAddress(i, locationCounter);
+        
+        for(int i=1; i<SymTable.count; i++){
+            SymTable.modifyAddress(i, locationCounter);
             locationCounter++;
         }
-        for(int i=0; i<SymTable.count; i++){
-            SymTable.modifyAddress(i, locationCounter);
+        for(int i=1; i<LitTable.count; i++){
+            LitTable.modifyAddress(i, locationCounter);
             locationCounter++;
         }
         for(Map.Entry<String, Integer> entry : foundSymbols.entrySet()){
@@ -258,7 +272,7 @@ class Assembler{
     void passTwo(File Code, File Output) throws IOException{
         lineNo = 0;
         FileWriter fw = new FileWriter(Output);
-        int locationCounter = 0;
+        int locationCounter = startAddress;
         String operand;
         String OPCode;
         Scanner sn = new Scanner(Code);
@@ -285,22 +299,23 @@ class Assembler{
             fw.write(address+" "+opcodeBinary+" ");
 
             //Getting operand and their binaries
+            boolean AddressAdded = false;
             for(int i = pos+1; i < split.length; i++) {
                 operand = split[i];
                 int val = 0;
                 try {
                     val = Integer.parseInt(operand);
-                    if(val >= 512) {
-                        System.out.println("Error : size of operand cannot be stored it 8 bits. Must be <= 511");
+                    if(val >= 256) {
+                        System.out.println("Error : size of operand cannot be stored it 8 bits. Must be <= 255");
                     }
                 }
                 catch(Exception e) {
                     val = LabTable.findAddress(operand);
                     if(val == -1){
-                        val = LitTable.find(operand);
+                        val = LitTable.findAddress(operand);
                     }
                     if(val == -1){
-                        val = SymTable.find(operand);
+                        val = SymTable.findAddress(operand);
                     }
                 }
                 finally {
@@ -310,10 +325,14 @@ class Assembler{
                         operandBinary = inter;
                     }
                     fw.write(operandBinary+" ");
+                    AddressAdded = true;
                 }
             }
+            if(AddressAdded == false) {
+                fw.write("00000000 ");
+            }
             fw.write("\n");
-            locationCounter += 12;   //******CHECK******
+            locationCounter += 1;   //******CHECK******
         }
 
         fw.close();
@@ -326,9 +345,9 @@ public class Main {
     public static void main(String[] args) throws IOException {
         // TODO Auto-generated method stub
         Assembler A = new Assembler();
-        File Code = new File("/home/akshala/Downloads/CO_final/src/input.txt");
-        File Intermediate = new File("/home/akshala/Downloads/CO_final/src/Intermediate.txt");
-        File Output = new File("/home/akshala/Downloads/CO_final/src/output.txt");
+        File Code = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\\\Inputs\\\\input.txt");
+        File Intermediate = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\\\Inputs\\\\Intermediate.txt");
+        File Output = new File("C:\\\\Users\\\\Harsh Kumar Sethi\\\\Desktop\\\\Inputs\\\\output.txt");
         try {
 //            A.Assemble(Code);
             A.passOne(Code, Intermediate);
@@ -340,6 +359,3 @@ public class Main {
         }
     }
 }
-
-
-
