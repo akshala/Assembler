@@ -243,14 +243,16 @@ class Assembler{
             System.out.println("ERROR in line " + lineNo + " : " + "STP statement is not present!");
         }
         fw.close();
-//        System.out.print("Symbol Table");
-//        LabTable.printTable();
-//        System.out.print("Literal Table");
-//        LitTable.printTable();
-//        System.out.print("Opcode Table");
-//        OpTable.printTable();
-//        System.out.println("Macro Table");
-//        MacTable.printTable();
+        System.out.print("Label Table");
+        LabTable.printTable();
+        System.out.print("Symbol Table");
+        SymTable.printTable();
+        System.out.print("Literal Table");
+        LitTable.printTable();
+        System.out.print("Opcode Table");
+        OpTable.printTable();
+        System.out.println("Macro Table");
+        MacTable.printTable();
         sn.close();
     }
     void passTwo(File Code, File Output) throws IOException{
