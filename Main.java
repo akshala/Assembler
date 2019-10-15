@@ -310,7 +310,7 @@ class Assembler{
                         System.out.println("Error : size of operand cannot be stored it 8 bits. Must be <= 255");
                     }
                 }
-                catch(Exception e) {
+                catch(Exception e) {    //Checking for type of operand
                     val = LabTable.findAddress(operand);
                     if(val == -1){
                         val = LitTable.findAddress(operand);
@@ -319,7 +319,7 @@ class Assembler{
                         val = SymTable.findAddress(operand);
                     }
                 }
-                finally {
+                finally {               //Converting operand address to binary
                     operandBinary = Integer.toBinaryString(val);
                     while(operandBinary.length() < 8) {
                         String inter = "0"+operandBinary;
