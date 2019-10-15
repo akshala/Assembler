@@ -41,7 +41,7 @@ The final object code is generated in the second pass. The values of opcodes and
 * Ensure that each label is declared only once.
 * Ensure that macro name is not same as that of opcode.
 * Ensure no two macros have the same name.
-* Ensure that each opcode is given the correct number of opcodes. Neither less nor more.
+* Ensure that each opcode is given the correct number of operands. Neither less nor more.
 * Ensure that label is declared before being called by branching opcodes. To ensure that each called label is declared, forward referencing is used.
 * STP is missing
 * In case the operand > 255 it cannot be represented in 8 bits for operand in instruction length.
